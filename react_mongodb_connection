@@ -1,0 +1,93 @@
+mkdir backend
+cd backend
+npm init -y
+----------
+npm install express mongoose cors
+-----------
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+app.use(cors());
+app.use(express.json());
+
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/your-database-name', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+// Define a MongoDB schema and model
+const mobileSchema = new mongoose.Schema({
+  name: String,
+  mobile: String,
+});
+
+const Mobile = mongoose.model('Mobile', mobileSchema);
+
+// API endpoint to save mobile and name
+app.post('/api/addMobile', async (req, res) => {
+  try {
+    const { name, mobile } = req.body;
+    const newMobile = new Mobile({ name, mobile });
+    await newMobile.save();
+    res.json({ success: true, message: 'Mobile added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+------------------------
+node server.js
+------------------------
+npx create-react-app frontend
+cd frontend
+-----------------------
+npm install axios
+-----------------------
+import React, { useState } from 'react';
+import axios from 'axios';
+
+function App() {
+  const [name, setName] = useState('');
+  const [mobile, setMobile] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('http://localhost:5000/api/addMobile', { name, mobile });
+      alert('Mobile added successfully');
+    } catch (error) {
+      console.error('Error adding mobile:', error);
+    }
+  };
+
+  return (
+    <div className="App">
+      <form onSubmit={handleSubmit}>
+        <label>
+          Name:
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <br />
+        <label>
+          Mobile:
+          <input type="text" value={mobile} onChange={(e) => setMobile(e.target.value)} />
+        </label>
+        <br />
+        <button type="submit">Add Mobile</button>
+      </form>
+    </div>
+  );
+}
+
+export default App;
+-------------------------
+npm start
